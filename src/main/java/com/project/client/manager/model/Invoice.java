@@ -23,6 +23,7 @@ public class Invoice {
     private Long id;
     private String invoiceNumber;
     private Double amount;
+    private String status;
     private LocalDate issueDate;
     private LocalDate dueDate;
 

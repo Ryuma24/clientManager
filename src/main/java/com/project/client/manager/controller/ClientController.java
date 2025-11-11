@@ -40,4 +40,14 @@ public class ClientController {
         clientService.deleteClient(id);
         return ResponseEntity.ok("Client Deleted Successfully");
     }
+
+    @GetMapping("/balance/{id}")
+    public ResponseEntity<Double> getTotalClientBalance(@PathVariable Long id) {
+        return ResponseEntity.ok(clientService.getTotalClientBalance(id));
+    }
+
+    @GetMapping("/outstanding/{id}")
+    public ResponseEntity<Double> getClientOutStandingBalance(@PathVariable Long id) {
+        return ResponseEntity.ok(clientService.getClientOutStandingBalance(id));
+    }
 }
