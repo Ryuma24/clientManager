@@ -2,6 +2,7 @@ package com.project.client.manager.controller;
 
 import com.project.client.manager.model.Invoice;
 import com.project.client.manager.service.InvoiceService;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,9 +18,11 @@ public class InvoiceController {
         this.invoiceService = invoiceService;
     }
 
-    @PostMapping
-    public ResponseEntity createInvoice(@RequestBody Invoice invoice){
-        return ResponseEntity.ok(invoiceService.createInvoice(invoice));
+    @PostMapping("/insert/{clientId}")
+    public ResponseEntity<List<Invoice>> createInvoice(@PathVariable Long clientId ,@RequestBody List<Invoice> invoices){
+        return ResponseEntity.ok(invoiceService.createInvoice(clientId , invoices));
+
+
     }
 
     @GetMapping("/client/{clientId}")

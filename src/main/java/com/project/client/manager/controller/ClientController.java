@@ -6,7 +6,6 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -20,9 +19,9 @@ public class ClientController {
 
     @PostMapping
     public ResponseEntity<Client> createClient(@Valid @RequestBody Client client){
-        Client savedClient = clientService.addClient(client);
-        var location = URI.create("/clients/"+savedClient.getId());
-        return ResponseEntity.created(location).body(savedClient);
+        return ResponseEntity.ok(clientService.addClient(client));
+
+
     }
 
     @GetMapping
@@ -30,24 +29,24 @@ public class ClientController {
         return ResponseEntity.ok(clientService.getAllClients());
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Client> getClientById(@PathVariable Long id){
-        return ResponseEntity.ok(clientService.getClientById(id));
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteClient(@PathVariable Long id){
-        clientService.deleteClient(id);
-        return ResponseEntity.ok("Client Deleted Successfully");
-    }
-
-    @GetMapping("/balance/{id}")
-    public ResponseEntity<Double> getTotalClientBalance(@PathVariable Long id) {
-        return ResponseEntity.ok(clientService.getTotalClientBalance(id));
-    }
-
-    @GetMapping("/outstanding/{id}")
-    public ResponseEntity<Double> getClientOutStandingBalance(@PathVariable Long id) {
-        return ResponseEntity.ok(clientService.getClientOutStandingBalance(id));
-    }
+//    @GetMapping("/{id}")
+//    public ResponseEntity<Client> getClientById(@PathVariable Long id){
+//        return ResponseEntity.ok(clientService.getClientById(id));
+//    }
+//
+//    @DeleteMapping("/{id}")
+//    public ResponseEntity<String> deleteClient(@PathVariable Long id){
+//        clientService.deleteClient(id);
+//        return ResponseEntity.ok("Client Deleted Successfully");
+//    }
+//
+//    @GetMapping("/balance/{id}")
+//    public ResponseEntity<Double> getTotalClientBalance(@PathVariable Long id) {
+//        return ResponseEntity.ok(clientService.getTotalClientBalance(id));
+//    }
+//
+//    @GetMapping("/outstanding/{id}")
+//    public ResponseEntity<Double> getClientOutStandingBalance(@PathVariable Long id) {
+//        return ResponseEntity.ok(clientService.getClientOutStandingBalance(id));
+//    }
 }
