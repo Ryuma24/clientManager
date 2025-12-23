@@ -31,8 +31,16 @@ public class InvoiceService {
 
     }
 
+    public List<Invoice> getAllInvoices() throws SQLException {
+        return invoiceRepository.getAllInvoices();
+    }
+
 
     public List<Invoice> findClientById(Long clientId) {
         return invoiceRepository.getInvoicesByClientId(clientId);
+    }
+
+    public Boolean updateInvoiceStatus(Long invoiceId, String  status){
+        return invoiceRepository.updateInvoiceStatus(invoiceId, status);
     }
 }

@@ -1,11 +1,15 @@
 package com.project.client.manager.repository;
 
 import com.project.client.manager.model.Invoice;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnNotWarDeployment;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 
+import javax.naming.PartialResultException;
 import javax.sql.DataSource;
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -54,7 +58,7 @@ public class InvoiceDao {
     public List<Invoice> getInvoicesByClientId(long clientId){
         String sqlQuery = "Select id , invoice_number, amount, status , issue_date , due_date ,  client_id from invoices where client_id = ?";
 
-        List<Invoice> invoices = new java.util.ArrayList<>();
+        List<Invoice> invoices = new ArrayList<>();
         try(Connection connection = dataSource.getConnection();
             PreparedStatement statement = connection.prepareStatement(sqlQuery)){
 
@@ -66,12 +70,55 @@ public class InvoiceDao {
                 inv.setId(rs.getLong("id"));
                 inv.setInvoiceNumber(rs.getString("invoice_number"));
                 inv.setAmount(rs.getDouble("amount"));
+                inv.setStatus(rs.getString("status"));
                 inv.setDueDate(rs.getDate("due_date").toLocalDate());
                 inv.setIssueDate(rs.getDate("issue_date").toLocalDate());
                 invoices.add(inv);
             }
 
             return invoices;
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public List<Invoice> getAllInvoices() throws SQLException {
+        String sqlQuery = "Select * from invoices";
+
+        try(Connection connection = dataSource.getConnection();
+            PreparedStatement statement = connection.prepareStatement(sqlQuery)){
+
+            ResultSet rs = statement.executeQuery();
+            List<Invoice> invoices =new ArrayList<>();
+            while(rs.next()){
+                Invoice inv = new Invoice();
+                inv.setId(rs.getLong("id"));
+                inv.setInvoiceNumber(rs.getString("invoice_number"));
+                inv.setAmount(rs.getDouble("amount"));
+                inv.setStatus(rs.getString("status"));
+                inv.setDueDate(rs.getDate("due_date").toLocalDate());
+                inv.setIssueDate(rs.getDate("issue_date").toLocalDate());
+                invoices.add(inv);
+            }
+
+            return invoices;
+
+        }
+
+    }
+
+    public Boolean updateInvoiceStatus(long invoiceId, String status){
+        String sqlQuery = "UPDATE invoices SET status = ? WHERE id = ?";
+
+        try(Connection connection = dataSource.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sqlQuery)){
+
+            statement.setString(1,status);
+            statement.setLong(2,invoiceId);
+
+
+            return statement.executeUpdate() == 1;
 
         } catch (SQLException e) {
             throw new RuntimeException(e);
