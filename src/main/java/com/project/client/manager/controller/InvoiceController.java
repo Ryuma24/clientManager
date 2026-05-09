@@ -1,9 +1,9 @@
 package com.project.client.manager.controller;
 
 import com.project.client.manager.model.Invoice;
+import com.project.client.manager.model.UpdateInvoice;
 import com.project.client.manager.service.InvoiceService;
 import jakarta.transaction.Transactional;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,6 +32,11 @@ public class InvoiceController {
         return ResponseEntity.ok(invoiceService.getAllInvoices());
     }
 
+    @GetMapping("/incomplete")
+    public ResponseEntity<List<Invoice>> getIncompleteInvoices() throws SQLException {
+        return ResponseEntity.ok(invoiceService.getIncompleteInvoices());
+    }
+
     @GetMapping("/client/{clientId}")
     public ResponseEntity<List<Invoice>> getInvoiceByClientId(@PathVariable Long clientId){
         return ResponseEntity.ok(invoiceService.findClientById(clientId));
@@ -39,7 +44,7 @@ public class InvoiceController {
 
     @Transactional
     @PutMapping("/status/{invoiceId}")
-    public ResponseEntity<Boolean> updateInvoiceStatus(@PathVariable Long invoiceId , @RequestBody String status){
-        return ResponseEntity.ok(invoiceService.updateInvoiceStatus(invoiceId,status));
+    public ResponseEntity<Boolean> updateInvoiceStatus(@PathVariable Long invoiceId , @RequestBody UpdateInvoice updateInvoice){
+        return ResponseEntity.ok(invoiceService.updateInvoice(invoiceId,updateInvoice.getStatus(),updateInvoice.getBalance()));
     }
 }

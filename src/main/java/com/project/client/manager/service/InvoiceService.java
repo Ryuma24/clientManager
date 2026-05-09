@@ -20,10 +20,8 @@ public class InvoiceService {
     PostgresConnection postgresConnection;
 
 
-
-
     public List<Invoice> createInvoice(Long clientId, List<Invoice> invoices) {
-        try(Connection connection = postgresConnection.connect()){
+        try (Connection connection = postgresConnection.connect()) {
             return invoiceRepository.insertInvoice(connection, clientId, invoices);
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -35,12 +33,16 @@ public class InvoiceService {
         return invoiceRepository.getAllInvoices();
     }
 
+    public List<Invoice> getIncompleteInvoices() throws SQLException {
+        return invoiceRepository.getIncompleteInvoices();
+    }
+
 
     public List<Invoice> findClientById(Long clientId) {
         return invoiceRepository.getInvoicesByClientId(clientId);
     }
 
-    public Boolean updateInvoiceStatus(Long invoiceId, String  status){
-        return invoiceRepository.updateInvoiceStatus(invoiceId, status);
+    public Boolean updateInvoice(Long invoiceId, String status, Double balance) {
+        return invoiceRepository.updateInvoiceStatus(invoiceId, status, balance);
     }
 }

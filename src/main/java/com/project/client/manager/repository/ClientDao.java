@@ -4,7 +4,6 @@ import com.project.client.manager.model.Client;
 import com.project.client.manager.model.Invoice;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
 import java.sql.*;
@@ -33,13 +32,10 @@ public class ClientDao {
             statement.setString(1, client.getName());
             statement.setString(2, client.getEmail());
             statement.setString(3, client.getPhone());
-
             int affectedRows = statement.executeUpdate();
-
             if(affectedRows == 0){
                 throw new SQLException("Inserting client failed, no rows affected.");
             }
-
             try(ResultSet rs = statement.getGeneratedKeys()){
                 if(rs.next()){
                     long id = rs.getLong("id");
@@ -59,33 +55,21 @@ public class ClientDao {
     public List<Client> fetchAllClients(Connection connection){
 
         String selectQuery = "SELECT * FROM clients";
-
         List<Client> clientList = new ArrayList<>();
 
         try(PreparedStatement statement = connection.prepareStatement(selectQuery)) {
-
             try(ResultSet rs = statement.executeQuery()){
-
                 while(rs.next()){
-
                     long clientId = rs.getLong("id");
-
                     Client client = Client.builder().email(rs.getString("email")).id(clientId).name(rs.getString("name")).phone(rs.getString("phone")).build();
-
                     List<Invoice> invoices = invoiceDao.getInvoicesByClientId(clientId);
-
                     if(!invoices.isEmpty()){
                         client.setInvoices(invoices);
                     }
-
-
                     clientList.add(client);
-
                 }
             }
-
             return clientList;
-
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

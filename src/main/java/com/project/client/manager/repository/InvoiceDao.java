@@ -1,12 +1,8 @@
 package com.project.client.manager.repository;
 
 import com.project.client.manager.model.Invoice;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnNotWarDeployment;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Repository;
 
-import javax.naming.PartialResultException;
 import javax.sql.DataSource;
 import java.sql.*;
 import java.util.ArrayList;
@@ -38,18 +34,9 @@ public class InvoiceDao {
                     if(rs.next()){
                         inv.setId(rs.getLong(1));
                     }
-
                 }
             }
-
-
-
-
-
             return invoices;
-
-
-
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -75,7 +62,6 @@ public class InvoiceDao {
                 inv.setIssueDate(rs.getDate("issue_date").toLocalDate());
                 invoices.add(inv);
             }
-
             return invoices;
 
         } catch (SQLException e) {
@@ -108,18 +94,38 @@ public class InvoiceDao {
 
     }
 
-    public Boolean updateInvoiceStatus(long invoiceId, String status){
-        String sqlQuery = "UPDATE invoices SET status = ? WHERE id = ?";
+    public List<Invoice> getIncompleteInvoices() throws SQLException {
+        String sqlQuery = "Select * from invoices where status <> 'PAID' ";
+
+        try(Connection connection = dataSource.getConnection();
+            PreparedStatement statement = connection.prepareStatement(sqlQuery)){
+
+            ResultSet rs = statement.executeQuery();
+            List<Invoice> invoices =new ArrayList<>();
+            while(rs.next()){
+                Invoice inv = new Invoice();
+                inv.setId(rs.getLong("id"));
+                inv.setInvoiceNumber(rs.getString("invoice_number"));
+                inv.setAmount(rs.getDouble("amount"));
+                inv.setStatus(rs.getString("status"));
+                inv.setDueDate(rs.getDate("due_date").toLocalDate());
+                inv.setIssueDate(rs.getDate("issue_date").toLocalDate());
+                invoices.add(inv);
+            }
+            return invoices;
+        }
+    }
+
+    public Boolean updateInvoiceStatus(long invoiceId, String status , Double balance){
+        String sqlQuery = "UPDATE invoices SET status = ?, amount = ? WHERE id = ?";
 
         try(Connection connection = dataSource.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sqlQuery)){
-
             statement.setString(1,status);
-            statement.setLong(2,invoiceId);
-
+            statement.setDouble(2, balance);
+            statement.setLong(3,invoiceId);
 
             return statement.executeUpdate() == 1;
-
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
