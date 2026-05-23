@@ -1,38 +1,40 @@
 package com.project.client.manager.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import jakarta.persistence.*;
+import lombok.Data;
 
-import java.util.Collection;
-import java.util.List;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
-public class User implements UserDetails {
+@Data
+@JsonIgnoreProperties
+public class User {
 
     @Id
-    @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String username;
-    private String password;
+    @Column(name = "full_name", nullable = false)
+    private String fullName;
 
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of();
-    }
+    @Column(nullable = false, unique = true)
+    private String email;
 
-    @Override
-    public String getPassword() {
-        return "";
-    }
+    @Column(name = "password_hash", nullable = false)
+    private String passwordHash;
 
-    @Override
-    public String getUsername() {
-        return "";
-    }
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role;
+
+    @Column(name = "is_email_verified")
+    private Boolean isEmailVerified;
+
+    @Column(name = "created_at_ts")
+    private LocalDateTime createdAtTs;
+
+    @Column(name = "updated_at_ts")
+    private LocalDateTime updatedAtTs;
 }

@@ -1,0 +1,14 @@
+/Users/pankaj/clientManager/src/main/java/com/project/client/manager/Application.java
+/Users/pankaj/clientManager/src/main/java/com/project/client/manager/config/PostgresConnection.java
+/Users/pankaj/clientManager/src/main/java/com/project/client/manager/config/SecurityConfig.java
+/Users/pankaj/clientManager/src/main/java/com/project/client/manager/controller/ClientController.java
+/Users/pankaj/clientManager/src/main/java/com/project/client/manager/controller/InvoiceController.java
+/Users/pankaj/clientManager/src/main/java/com/project/client/manager/model/Client.java
+/Users/pankaj/clientManager/src/main/java/com/project/client/manager/model/Invoice.java
+/Users/pankaj/clientManager/src/main/java/com/project/client/manager/model/Status.java
+/Users/pankaj/clientManager/src/main/java/com/project/client/manager/model/User.java
+/Users/pankaj/clientManager/src/main/java/com/project/client/manager/postgressDataIngestion.java
+/Users/pankaj/clientManager/src/main/java/com/project/client/manager/repository/ClientDao.java
+/Users/pankaj/clientManager/src/main/java/com/project/client/manager/repository/InvoiceDao.java
+/Users/pankaj/clientManager/src/main/java/com/project/client/manager/service/ClientService.java
+/Users/pankaj/clientManager/src/main/java/com/project/client/manager/service/InvoiceService.java
