@@ -1,9 +1,6 @@
 package com.project.client.manager.service;
 
-import com.project.client.manager.config.PostgresConnection;
 import com.project.client.manager.model.Client;
-import com.project.client.manager.model.Invoice;
-import com.project.client.manager.model.Status;
 import com.project.client.manager.repository.ClientDao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,32 +14,31 @@ public class ClientService {
 
     private final ClientDao clientDao;
 
-    @Autowired
-    PostgresConnection postgresConnection;
+
 
     public ClientService(ClientDao clientDao){
         this.clientDao = clientDao;
     }
 
-    public Client addClient(Client client){
-        try(Connection connection = postgresConnection.connect()){
-            connection.setAutoCommit(false);
-            clientDao.insertClient(connection, client);
-            return client;
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public List<Client> getAllClients(){
-        try(Connection connection = postgresConnection.connect()){
-            connection.setAutoCommit(false);
-            return clientDao.fetchAllClients(connection);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-
-    }
+//    public Client addClient(Client client){
+//        try(Connection connection = postgresConnection.connect()){
+//            connection.setAutoCommit(false);
+//            clientDao.insertClient(connection, client);
+//            return client;
+//        } catch (SQLException e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
+//
+//    public List<Client> getAllClients(){
+//        try(Connection connection = postgresConnection.connect()){
+//            connection.setAutoCommit(false);
+//            return clientDao.fetchAllClients(connection);
+//        } catch (SQLException e) {
+//            throw new RuntimeException(e);
+//        }
+//
+//    }
 
 //    public Client getClientById(Long id){
 //        return clientDao.findById(id).orElseThrow(()->new RuntimeException("Client not found"));
