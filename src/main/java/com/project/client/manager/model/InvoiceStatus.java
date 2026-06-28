@@ -2,7 +2,7 @@ package com.project.client.manager.model;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 
-public enum Status {
+public enum InvoiceStatus {
     PAID("paid"),
     OVERDUE("overdue"),
     DRAFT("draft"),
@@ -10,7 +10,7 @@ public enum Status {
 
     public final String label;
 
-    Status(String label) {
+    InvoiceStatus(String label) {
         this.label = label;
     }
 
@@ -24,10 +24,10 @@ public enum Status {
     }
 
     @JsonCreator
-    public static Status fromLabel(String label) {
+    public static InvoiceStatus fromLabel(String label) {
         if(label ==null)return null;
         String trimmedLabel = label.trim();
-        for(Status s: values()){
+        for(InvoiceStatus s: values()){
             if(s.label.equalsIgnoreCase(trimmedLabel))return s;
         }
 

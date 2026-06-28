@@ -8,7 +8,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.sql.Timestamp;
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -22,6 +24,9 @@ public class Invoice {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private Long userId;
+
+
     @Column(unique = true, nullable = false)
     @NotBlank(message = "Invoice number is required")
     private String invoiceNumber;
@@ -29,7 +34,7 @@ public class Invoice {
     @Column(nullable = false)
     @NotNull(message = "Amount is required")
     @DecimalMin(value = "0.01", message = "Amount must be greater than 0")
-    private Double amount;
+    private Double subTotal;
 
     @Column(nullable = false)
     @Pattern(regexp = "DRAFT|SENT|PENDING|PAID|OVERDUE", message = "Invalid status")
@@ -50,5 +55,19 @@ public class Invoice {
     @NotNull(message = "Client is required")
     @JsonBackReference
     private Client client;
+
+    @ElementCollection
+    private List<InvoiceItem> invoiceItemList;
+
+    private Double taxAmount;
+
+    private Double amountPaid;
+
+    private Double balanceAmount;
+
+    private Timestamp createdAt;
+
+    private Timestamp updatedAt;
+
 
 }

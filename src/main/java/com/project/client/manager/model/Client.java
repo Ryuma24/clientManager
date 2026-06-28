@@ -8,6 +8,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.List;
 
 @Entity
@@ -27,6 +29,8 @@ public class Client {
     @Size(min = 2, max = 100, message = "Client name must be between 2 and 100 characters")
     private String name;
 
+    private Long userId;
+
     @Column(nullable = false, unique = true)
     @NotBlank(message = "Email is required")
     @Email(message = "Email should be valid")
@@ -37,6 +41,14 @@ public class Client {
         message = "Phone number must be a valid E.164 format (optional)"
     )
     private String phone;
+
+    private String address;
+
+    private String taxId;
+
+    private Timestamp createdAt;
+
+    private Timestamp updatedAt;
 
     @OneToMany(mappedBy = "client", cascade = CascadeType.ALL,orphanRemoval = true)
     @JsonManagedReference

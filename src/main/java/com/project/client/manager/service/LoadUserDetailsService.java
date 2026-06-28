@@ -1,0 +1,32 @@
+package com.project.client.manager.service;
+
+import com.project.client.manager.model.User;
+import com.project.client.manager.repository.UserRepository;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Service;
+
+@Service
+public class LoadUserDetailsService implements UserDetailsService {
+
+    private final UserRepository userRepository;
+
+    public LoadUserDetailsService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        User user = userRepository.findByUsername(username).orElseThrow(
+                () -> new UsernameNotFoundException("User not found : " + username)
+        );
+
+        return org.springframework.security.core.userdetails.User.builder()
+                .username(user.getUsername())
+                .password(user.getPassword())
+                .roles(user.getRole().name())
+                .disabled(!user.isEnabled())
+                .build();
+    }
+}
