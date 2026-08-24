@@ -3,34 +3,34 @@ package com.project.client.manager.model;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 public enum InvoiceStatus {
-    PAID("paid"),
-    OVERDUE("overdue"),
-    DRAFT("draft"),
-    SENT("sent");
+  PAID("paid"),
+  OVERDUE("overdue"),
+  DRAFT("draft"),
+  SENT("sent");
 
-    public final String label;
+  public final String label;
 
-    InvoiceStatus(String label) {
-        this.label = label;
+  InvoiceStatus(String label) {
+    this.label = label;
+  }
+
+  @JsonCreator
+  public static InvoiceStatus fromLabel(String label) {
+    if (label == null) return null;
+    String trimmedLabel = label.trim();
+    for (InvoiceStatus s : values()) {
+      if (s.label.equalsIgnoreCase(trimmedLabel)) return s;
     }
 
-    public String getLabel() {
-        return label;
-    }
+    return null;
+  }
 
-    @Override
-    public String toString() {
-        return this.label;
-    }
+  public String getLabel() {
+    return label;
+  }
 
-    @JsonCreator
-    public static InvoiceStatus fromLabel(String label) {
-        if(label ==null)return null;
-        String trimmedLabel = label.trim();
-        for(InvoiceStatus s: values()){
-            if(s.label.equalsIgnoreCase(trimmedLabel))return s;
-        }
-
-        return null;
-    }
+  @Override
+  public String toString() {
+    return this.label;
+  }
 }

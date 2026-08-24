@@ -2,24 +2,25 @@ package com.project.client.manager.repository;
 
 import com.project.client.manager.model.Invoice;
 import com.project.client.manager.model.InvoiceStatus;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 @Repository
 public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
 
-    List<Invoice> findByUserId(Long userId);
+  List<Invoice> findByUserId(Long userId);
 
-    Optional<Invoice> findByIdAndUserId(Long id, Long userId);
+  Optional<Invoice> findByIdAndClientUserUsername(Long id, String username);
 
-    List<Invoice> findByUserIdAndClientId(Long userId, Long clientId);
+  Optional<Invoice> findByIdAndClient_Email(Long id, String email);
 
-    List<Invoice> findByClientId(Long id);
+  List<Invoice> findByUserIdAndClient_Id(Long userId, Long clientId);
 
-    List<Invoice> findByUserIdAndStatus(Long userId, InvoiceStatus status);
+  List<Invoice> findByClient_Id(Long id);
 
-    Optional<Invoice> findByInvoiceNumberAndUserId(String invoiceNumber, Long userId);
+  List<Invoice> findByUserIdAndStatus(Long userId, InvoiceStatus status);
+
+  Optional<Invoice> findByIdAndClient_Id(Long invoiceId, Long clientId);
 }

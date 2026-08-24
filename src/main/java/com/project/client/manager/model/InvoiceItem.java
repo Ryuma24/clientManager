@@ -1,23 +1,16 @@
 package com.project.client.manager.model;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Embeddable;
 import lombok.Data;
 
 @Data
-@Entity
+@Embeddable
 public class InvoiceItem {
-    @Id
-    @GeneratedValue
-    private Long id;
+  private String itemName;
 
-    private Long invoiceId;
+  private Double amount;
 
-    private String itemName;
+  private Integer quantity;
 
-    private Double amount;
-
-    private Integer quantity;
-
-    private Double unitPrice;
-
+  private Double unitPrice;
 }

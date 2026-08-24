@@ -1,22 +1,21 @@
 package com.project.client.manager.service;
 
-import org.springframework.security.core.GrantedAuthority;
-
 import java.util.Collection;
+import org.springframework.security.core.GrantedAuthority;
 
 public interface UserDetails {
 
-    Collection<? extends GrantedAuthority> getAuthorities();
+  Collection<? extends GrantedAuthority> getAuthorities();
 
-    String getPassword();
+  String getPassword();
 
-    String getUserNAme();
+  String getUserNAme();
 
-    boolean isAccountNonExpired();
+  boolean isAccountNonExpired();
 
-    boolean isAccountNonLocked();
+  boolean isAccountNonLocked();
 
-    boolean isCredentialsNonExpired();
+  boolean isCredentialsNonExpired();
 
-    boolean isEnabled();
+  boolean isEnabled();
 }

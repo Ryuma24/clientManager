@@ -1,51 +1,39 @@
-//package com.project.client.manager.controller;
-//
-//import com.project.client.manager.model.Client;
-//import jakarta.validation.Valid;
-//import org.springframework.http.ResponseEntity;
-//import org.springframework.web.bind.annotation.*;
-//
-//import java.util.List;
-//
-//@RestController
-//@RequestMapping("/clients")
-//public class ClientController {
-//    private final ClientService clientService;
-//
-//    public ClientController(ClientService clientService){
-//        this.clientService = clientService;
-//    }
-//
-//    @PostMapping
-//    public ResponseEntity<Client> createClient(@Valid @RequestBody Client client){
-//        return ResponseEntity.ok(clientService.addClient(client));
-//
-//
-//    }
-//
-//    @GetMapping
-//    public ResponseEntity<List<Client>> getAllClients(){
-//        return ResponseEntity.ok(clientService.getAllClients());
-//    }
-//
-////    @GetMapping("/{id}")
-////    public ResponseEntity<Client> getClientById(@PathVariable Long id){
-////        return ResponseEntity.ok(clientService.getClientById(id));
-////    }
-////
-////    @DeleteMapping("/{id}")
-////    public ResponseEntity<String> deleteClient(@PathVariable Long id){
-////        clientService.deleteClient(id);
-////        return ResponseEntity.ok("Client Deleted Successfully");
-////    }
-////
-////    @GetMapping("/balance/{id}")
-////    public ResponseEntity<Double> getTotalClientBalance(@PathVariable Long id) {
-////        return ResponseEntity.ok(clientService.getTotalClientBalance(id));
-////    }
-////
-////    @GetMapping("/outstanding/{id}")
-////    public ResponseEntity<Double> getClientOutStandingBalance(@PathVariable Long id) {
-////        return ResponseEntity.ok(clientService.getClientOutStandingBalance(id));
-////    }
-//}
+package com.project.client.manager.controller;
+
+import com.project.client.manager.model.Client;
+import com.project.client.manager.service.ClientService;
+import jakarta.validation.Valid;
+import java.util.List;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/clients")
+public class ClientController {
+  private final ClientService clientService;
+
+  public ClientController(ClientService clientService) {
+    this.clientService = clientService;
+  }
+
+  @PostMapping("/create")
+  public ResponseEntity<Client> createClient(
+      @Valid @RequestBody Client client, Authentication authentication) {
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(clientService.createClient(client, authentication.getName()));
+  }
+
+  @GetMapping("/get")
+  public ResponseEntity<List<Client>> getClients(Authentication authentication) {
+    return ResponseEntity.ok(clientService.getClients(authentication.getName()));
+  }
+
+  @DeleteMapping("/delete/{clientId}")
+  public ResponseEntity<String> deleteClient(
+      @PathVariable Long clientId, Authentication authentication) {
+    clientService.deleteClient(clientId, authentication.getName());
+    return ResponseEntity.ok("Client Deleted Successfully");
+  }
+}

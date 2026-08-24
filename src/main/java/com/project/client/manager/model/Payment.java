@@ -1,29 +1,32 @@
 package com.project.client.manager.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import lombok.Data;
-
-import java.sql.Time;
+import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.sql.Timestamp;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Entity
+@Builder
 public class Payment {
-    @Id
-    @GeneratedValue
-    private Long id;
+  @Id @GeneratedValue private Long id;
 
-    private Long invoiceId;
+  @ManyToOne
+  @JoinColumn(name = "invoice_id")
+  private Invoice invoice;
 
-    private Double amount;
+  private BigDecimal amount;
 
-    private PaymentStatus status;
+  private PaymentStatus status;
 
-    private String transactionId;
+  private String transactionId;
 
-    private String gateway;
+  private String gateway;
 
-    private Timestamp paymentDoneAt;
+  private Timestamp paymentDoneAt;
+
+  private String razorpayOrderId;
+
+  private String razorpayPaymentId;
 }

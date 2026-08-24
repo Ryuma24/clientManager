@@ -1,0 +1,13 @@
+node_modules
+frontend/dist
+dist
+.DS_Store
+.idea
+.vscode
+*.zip
+# Keep environment variables out of version control
+.env
+
+/target
+
+/src/generated/prisma
