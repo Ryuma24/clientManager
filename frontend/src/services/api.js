@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://client-manager-mg8s-mqbwwnwba-ryuma24.vercel.app'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://clientmanager-h4tm.onrender.com'
 
 function getToken() {
   return localStorage.getItem('token')
