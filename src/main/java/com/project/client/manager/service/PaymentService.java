@@ -18,6 +18,7 @@ import org.apache.commons.codec.binary.Hex;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -33,16 +34,29 @@ public class PaymentService {
 
   public Payment createPayment(PaymentRequest paymentRequest, String username) {
 
+    if (paymentRequest == null
+        || paymentRequest.getInvoiceId() == null
+        || paymentRequest.getAmount() == null
+        || paymentRequest.getAmount().signum() <= 0) {
+      throw new RuntimeException("Invalid payment request");
+    }
+
     Invoice invoice =
         invoiceRepository
-        .findByIdAndClient_Email(
-          paymentRequest.getInvoiceId(),
-          userEmail(username))
+            .findByIdAndClient_Email(paymentRequest.getInvoiceId(), userEmail(username))
             .orElseThrow(() -> new RuntimeException("Invoice does not exist"));
 
+    BigDecimal total =
+        invoice.getTotalAmount() == null ? BigDecimal.valueOf(invoice.getSubTotal()) : invoice.getTotalAmount();
+    BigDecimal currentPaid = invoice.getAmountPaid() == null ? BigDecimal.ZERO : invoice.getAmountPaid();
+    BigDecimal remaining = total.subtract(currentPaid);
+
+    if (paymentRequest.getAmount().compareTo(remaining) > 0) {
+      throw new RuntimeException("Payment amount exceeds remaining invoice balance");
+    }
+
     try {
-      long amountInPaise =
-          paymentRequest.getAmount().multiply(BigDecimal.valueOf(100)).longValueExact();
+      long amountInPaise = paymentRequest.getAmount().multiply(BigDecimal.valueOf(100)).longValueExact();
 
       JSONObject orderRequest = new JSONObject();
       orderRequest.put("amount", amountInPaise);
@@ -65,8 +79,25 @@ public class PaymentService {
     }
   }
 
+  @Transactional
   public Boolean verifyPayment(PaymentVerificationRequest request)
       throws InvalidKeyException, NoSuchAlgorithmException {
+
+    if (request == null
+        || request.getRazorpayOrderId() == null
+        || request.getRazorpayPaymentId() == null
+        || request.getRazorpaySignature() == null) {
+      return false;
+    }
+
+    Payment payment =
+        paymentRepository
+            .findByRazorpayOrderId(request.getRazorpayOrderId())
+            .orElseThrow(() -> new RuntimeException("Payment record not found"));
+
+    if (payment.getStatus() == PaymentStatus.SUCCESSFUL) {
+      return false;
+    }
 
     String signature = request.getRazorpayOrderId() + "|" + request.getRazorpayPaymentId();
 
@@ -75,18 +106,13 @@ public class PaymentService {
         new SecretKeySpec(razorpayKeySecret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
     sha256_HMAC.init(secretKeySpec);
 
-    String generateSignature =
+    String generatedSignature =
         Hex.encodeHexString(sha256_HMAC.doFinal(signature.getBytes(StandardCharsets.UTF_8)));
 
-    boolean isValidSignature = generateSignature.equals(request.getRazorpaySignature());
+    boolean isValidSignature = generatedSignature.equals(request.getRazorpaySignature());
     if (!isValidSignature) {
       return false;
     }
-
-    Payment payment =
-        paymentRepository
-            .findByRazorpayOrderId(request.getRazorpayOrderId())
-            .orElseThrow(() -> new RuntimeException("Payment record not found"));
 
     Invoice invoice = payment.getInvoice();
     if (invoice == null) {
@@ -98,7 +124,8 @@ public class PaymentService {
     BigDecimal newTotalPaid = currentPaid.add(paidAmount);
 
     invoice.setAmountPaid(newTotalPaid);
-    invoice.setTotalAmount(BigDecimal.valueOf(invoice.getSubTotal()));
+    invoice.setTotalAmount(
+        invoice.getTotalAmount() == null ? BigDecimal.valueOf(invoice.getSubTotal()) : invoice.getTotalAmount());
 
     if (newTotalPaid.compareTo(invoice.getTotalAmount()) >= 0) {
       invoice.setAmountStatus(PaymentAmountStatus.FULL);
@@ -118,7 +145,13 @@ public class PaymentService {
     return true;
   }
 
+  @Transactional
   public void doPayment(Long paymentId, PaymentRequest paymentRequest, String username) {
+
+    if (paymentRequest == null || paymentRequest.getInvoiceId() == null || paymentRequest.getAmount() == null
+        || paymentRequest.getAmount().signum() <= 0) {
+      throw new RuntimeException("Invalid payment request");
+    }
 
     Invoice invoice =
         invoiceRepository
@@ -130,9 +163,22 @@ public class PaymentService {
             .findByIdAndInvoiceId(paymentId, paymentRequest.getInvoiceId())
             .orElseThrow(() -> new RuntimeException("Payment Does not exist!"));
 
-    invoice.setAmountPaid(invoice.getAmountPaid().add(paymentRequest.getAmount()));
+    if (payment.getStatus() == PaymentStatus.SUCCESSFUL) {
+      return;
+    }
 
-    if (invoice.getAmountPaid().compareTo(BigDecimal.valueOf(invoice.getSubTotal())) >= 0) {
+    BigDecimal total =
+        invoice.getTotalAmount() == null ? BigDecimal.valueOf(invoice.getSubTotal()) : invoice.getTotalAmount();
+    BigDecimal currentPaid = invoice.getAmountPaid() == null ? BigDecimal.ZERO : invoice.getAmountPaid();
+    BigDecimal remaining = total.subtract(currentPaid);
+
+    if (paymentRequest.getAmount().compareTo(remaining) > 0) {
+      throw new RuntimeException("Payment amount exceeds remaining invoice balance");
+    }
+
+    invoice.setAmountPaid(currentPaid.add(paymentRequest.getAmount()));
+
+    if (invoice.getAmountPaid().compareTo(total) >= 0) {
       invoice.setAmountStatus(PaymentAmountStatus.FULL);
       invoice.setStatus("PAID");
     } else {
@@ -141,6 +187,8 @@ public class PaymentService {
     }
 
     payment.setStatus(PaymentStatus.SUCCESSFUL);
+    payment.setGateway("RAZORPAY");
+    payment.setPaymentDoneAt(new Timestamp(System.currentTimeMillis()));
 
     invoiceRepository.save(invoice);
     paymentRepository.save(payment);

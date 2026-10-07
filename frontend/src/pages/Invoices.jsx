@@ -13,7 +13,7 @@ const plusDays = (days) => {
 }
 
 const buildEmptyItem = () => ({ itemName: '', quantity: 1, unitPrice: '' })
-const DUMMY_RAZORPAY_URL = 'https://razorpay.com/payment-links/'
+const RAZORPAY_SCRIPT_SRC = 'https://checkout.razorpay.com/v1/checkout.js'
 
 const initialInvoiceForm = () => ({
   invoiceNumber: '',
@@ -33,6 +33,28 @@ export default function Invoices({ client, isClient = false, initialInvoices, in
   const [invoiceItems, setInvoiceItems] = useState([buildEmptyItem()])
   const [saving, setSaving] = useState(false)
   const [selectedInvoice, setSelectedInvoice] = useState(initialSelectedInvoice || null)
+  const [isPaying, setIsPaying] = useState(false)
+
+  const loadRazorpayScript = () => new Promise((resolve, reject) => {
+    if (window.Razorpay) {
+      resolve()
+      return
+    }
+
+    const existingScript = document.querySelector(`script[src="${RAZORPAY_SCRIPT_SRC}"]`)
+    if (existingScript) {
+      existingScript.addEventListener('load', () => resolve(), { once: true })
+      existingScript.addEventListener('error', () => reject(new Error('Razorpay script failed to load.')), { once: true })
+      return
+    }
+
+    const script = document.createElement('script')
+    script.src = RAZORPAY_SCRIPT_SRC
+    script.async = true
+    script.onload = () => resolve()
+    script.onerror = () => reject(new Error('Razorpay script failed to load.'))
+    document.body.appendChild(script)
+  })
 
   const loadInvoices = async () => {
     setLoading(true)
@@ -141,7 +163,7 @@ export default function Invoices({ client, isClient = false, initialInvoices, in
       return
     }
 
-    const total = Number(invoice.totalAmount || 0)
+    const total = Number(invoice.totalAmount || invoice.subTotal || 0)
     const paid = Number(invoice.amountPaid || 0)
     const balance = Number(invoice.balanceAmount ?? (total - paid))
 
@@ -149,19 +171,63 @@ export default function Invoices({ client, isClient = false, initialInvoices, in
       return
     }
 
-    window.open(DUMMY_RAZORPAY_URL, '_blank', 'noopener,noreferrer')
+    setError('')
+    setSuccess('')
+    setIsPaying(true)
 
-    const paidInvoice = {
-      ...invoice,
-      amountPaid: total,
-      balanceAmount: 0,
-      amountStatus: 'FULL',
-      status: 'PAID',
+    try {
+      await loadRazorpayScript()
+
+      const razorpayConfig = await api.getRazorpayConfig()
+      const createdOrder = await api.createPayment({
+        invoiceId: invoice.id,
+        amount: Number(balance.toFixed(2)),
+      })
+
+      const razorpay = new window.Razorpay({
+        key: razorpayConfig.key,
+        amount: Math.round(Number(createdOrder.amount || balance) * 100),
+        currency: 'INR',
+        name: 'Client Manager',
+        description: `Invoice #${invoice.id}`,
+        order_id: createdOrder.razorpayOrderId || createdOrder.id,
+        handler: async (response) => {
+          try {
+            await api.verifyPayment({
+              razorpayOrderId: response.razorpay_order_id,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature,
+            })
+
+            await loadInvoices()
+            setSelectedInvoice(null)
+            setSuccess(`Payment successful for invoice #${invoice.id}.`)
+            onPaymentSuccess?.({
+              ...invoice,
+              amountPaid: total,
+              balanceAmount: 0,
+              amountStatus: 'FULL',
+              status: 'PAID',
+            })
+          } catch (verifyError) {
+            setError(verifyError.message || 'Payment verification failed.')
+          } finally {
+            setIsPaying(false)
+          }
+        },
+        modal: {
+          ondismiss: () => setIsPaying(false),
+        },
+        theme: {
+          color: '#2563eb',
+        },
+      })
+
+      razorpay.open()
+    } catch (err) {
+      setError(err.message || 'Unable to start Razorpay checkout.')
+      setIsPaying(false)
     }
-    setInvoices((current) => current.map((item) => item.id === invoice.id ? paidInvoice : item))
-    setSelectedInvoice(paidInvoice)
-    setSuccess(`Dummy payment completed for invoice #${invoice.id}. The invoice is now marked as paid.`)
-    onPaymentSuccess?.(paidInvoice)
   }
 
   return (
@@ -422,9 +488,14 @@ export default function Invoices({ client, isClient = false, initialInvoices, in
 
           <div className="invoice-detail-footer">
             <strong>Total: {money(selectedInvoice.totalAmount ?? selectedInvoice.subTotal)}</strong>
-            {isClient && Number(selectedInvoice.balanceAmount ?? (Number(selectedInvoice.totalAmount || 0) - Number(selectedInvoice.amountPaid || 0))) > 0 && (
-              <button type="button" className="primary-button" onClick={() => handlePayInvoice(selectedInvoice)}>
-                Pay now
+            {isClient && Number(selectedInvoice.balanceAmount ?? (Number(selectedInvoice.totalAmount || selectedInvoice.subTotal || 0) - Number(selectedInvoice.amountPaid || 0))) > 0 && (
+              <button
+                type="button"
+                className="primary-button"
+                onClick={() => handlePayInvoice(selectedInvoice)}
+                disabled={isPaying}
+              >
+                {isPaying ? 'Processing…' : 'Pay now'}
               </button>
             )}
           </div>

@@ -34,7 +34,7 @@ public class SecurityConfig {
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-    http.cors(cors -> {})
+    http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
         .authorizeHttpRequests(
             auth ->
                 auth.requestMatchers(HttpMethod.OPTIONS, "/**")
@@ -103,15 +103,22 @@ public class SecurityConfig {
     CorsConfiguration config = new CorsConfiguration();
 
     config.setAllowedOrigins(
-      List.of(
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "https://client-manager-mg8s.vercel.app"));
-
+        List.of(
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+            "https://client-manager-mg8s.vercel.app"));
     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-
-    config.setAllowedHeaders(List.of("*"));
+    config.setAllowedHeaders(
+        List.of(
+            "Authorization",
+            "Content-Type",
+            "Accept",
+            "Origin",
+            "X-Requested-With",
+            "Access-Control-Request-Method",
+            "Access-Control-Request-Headers"));
     config.setAllowCredentials(true);
+    config.setExposedHeaders(List.of("Authorization"));
 
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 
