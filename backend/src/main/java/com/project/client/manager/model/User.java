@@ -38,7 +38,7 @@ public class User implements UserDetails {
       message = "Username can only contain alphanumeric characters, dots, dashes, and underscores")
   private String username;
 
-  @Column(nullable = false)
+  @Column(name = "password_hash", nullable = false)
   @NotBlank(message = "Password is required")
   @Size(min = 8, message = "Password must be at least 8 characters")
   private String password;
