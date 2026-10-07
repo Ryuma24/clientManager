@@ -106,7 +106,8 @@ public class SecurityConfig {
         List.of(
             "http://localhost:5173",
             "http://127.0.0.1:5173",
-            "https://client-manager-mg8s.vercel.app"));
+            "https://client-manager-mg8s.vercel.app",
+            "https://client-manager-mg8s-k55ojx7ai-ryuma24.vercel.app"));
     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
     config.setAllowedHeaders(
         List.of(
