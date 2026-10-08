@@ -50,7 +50,7 @@ class PaymentServiceTest {
   void verifyPayment_shouldIgnoreAlreadyProcessedOrder() throws Exception {
     Invoice invoice = new Invoice();
     invoice.setId(10L);
-    invoice.setSubTotal(500.0);
+    invoice.setSubTotal(BigDecimal.valueOf(500));
     invoice.setAmountPaid(BigDecimal.valueOf(500));
     invoice.setTotalAmount(BigDecimal.valueOf(500));
     invoice.setAmountStatus(PaymentAmountStatus.FULL);
@@ -83,9 +83,11 @@ class PaymentServiceTest {
     verify(paymentRepository, never()).save(any());
   }
 
-  private String createSignature(String payload, String secret) throws NoSuchAlgorithmException, InvalidKeyException {
+  private String createSignature(String payload, String secret)
+      throws NoSuchAlgorithmException, InvalidKeyException {
     Mac sha256Hmac = Mac.getInstance("HmacSHA256");
-    SecretKeySpec secretKeySpec = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+    SecretKeySpec secretKeySpec =
+        new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
     sha256Hmac.init(secretKeySpec);
     return Hex.encodeHexString(sha256Hmac.doFinal(payload.getBytes(StandardCharsets.UTF_8)));
   }

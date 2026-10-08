@@ -4,6 +4,7 @@ import com.project.client.manager.dto.LoginRequest;
 import com.project.client.manager.dto.RegisterRequest;
 import com.project.client.manager.model.Role;
 import com.project.client.manager.model.User;
+import com.project.client.manager.repository.ClientRepository;
 import com.project.client.manager.repository.UserRepository;
 import java.util.Optional;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -14,19 +15,24 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthService {
 
   private final UserRepository userRepository;
+  private final ClientRepository clientRepository;
   private final PasswordEncoder passwordEncoder;
   private final UserService userService;
 
   public AuthService(
-      UserRepository userRepository, PasswordEncoder passwordEncoder, UserService userService) {
+      UserRepository userRepository,
+      ClientRepository clientRepository,
+      PasswordEncoder passwordEncoder,
+      UserService userService) {
     this.userRepository = userRepository;
+    this.clientRepository = clientRepository;
     this.passwordEncoder = passwordEncoder;
     this.userService = userService;
   }
 
   @Transactional
-  public User registerUser(RegisterRequest request) {
-    Role selectedRole = request.getRole() != null ? request.getRole() : Role.USER;
+  public User registerAccount(RegisterRequest request) {
+    Role selectedRole = request.getRole() == Role.CLIENT ? Role.CLIENT : Role.USER;
 
     User user =
         User.builder()
@@ -36,11 +42,23 @@ public class AuthService {
             .role(selectedRole)
             .build();
 
-    return userService.insertUser(user);
+    User savedUser = userService.insertUser(user);
+
+    if (selectedRole == Role.CLIENT) {
+      clientRepository
+          .findByEmailIgnoreCase(request.getEmail())
+          .ifPresent(
+              clientProfile -> {
+                savedUser.getClients().add(clientProfile);
+                clientProfile.getUsers().add(savedUser);
+                userRepository.save(savedUser);
+              });
+    }
+    return savedUser;
   }
 
   @Transactional(readOnly = true)
-  public Optional<User> loginUser(LoginRequest request) {
+  public Optional<User> authenticate(LoginRequest request) {
 
     Optional<User> existingUser =
         Optional.of(

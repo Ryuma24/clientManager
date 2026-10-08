@@ -1,15 +1,19 @@
 package com.project.client.manager.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.sql.Timestamp;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @Entity
@@ -29,9 +33,11 @@ public class Client {
   @Size(min = 2, max = 100, message = "Client name must be between 2 and 100 characters")
   private String name;
 
-  @ManyToOne
-  @JoinColumn(name = "user_id")
-  private User user;
+  @ManyToMany(mappedBy = "clients")
+  @Builder.Default
+  @EqualsAndHashCode.Exclude
+  @JsonIgnore
+  private Set<User> users = new HashSet<>();
 
   @Column(nullable = false, unique = true)
   @NotBlank(message = "Email is required")
@@ -53,5 +59,6 @@ public class Client {
 
   @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference
+  @EqualsAndHashCode.Exclude
   private List<Invoice> invoices;
 }

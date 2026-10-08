@@ -9,15 +9,9 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ClientRepository extends JpaRepository<Client, Long> {
 
-  List<Client> findByUserId(Long userId);
+  List<Client> findByUsers_Username(String username);
 
-  Optional<Client> findById(Long id);
+  Optional<Client> findByEmailIgnoreCase(String email);
 
-  Optional<Client> findByIdAndUserId(Long id, Long userId);
-
-  List<Client> findByUserUsername(String username);
-
-  Optional<Client> findByEmail(String email);
-
-  Optional<Client> findByIdAndUserUsername(Long clientId, String Username);
+  Optional<Client> findByIdAndUsers_Username(Long clientId, String username);
 }

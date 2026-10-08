@@ -6,6 +6,7 @@ import com.project.client.manager.model.PaymentAmountStatus;
 import com.project.client.manager.repository.ClientRepository;
 import com.project.client.manager.repository.InvoiceRepository;
 import com.project.client.manager.repository.UserRepository;
+import java.math.BigDecimal;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,23 +22,30 @@ public class InvoiceService {
   public Invoice createInvoice(Invoice invoice, Long clientId, String username) {
     Client client =
         clientRepository
-            .findByIdAndUserUsername(clientId, username)
+            .findByIdAndUsers_Username(clientId, username)
             .orElseThrow(() -> new RuntimeException("Client does not exist"));
+    var creator =
+        userRepository
+            .findByUsername(username)
+            .orElseThrow(() -> new RuntimeException("User does not exist"));
 
     if (invoice.getSubTotal() == null) {
       invoice.setSubTotal(
           invoice.getInvoiceItemList() == null
-              ? 0.0
+              ? BigDecimal.ZERO
               : invoice.getInvoiceItemList().stream()
-                  .mapToDouble(item -> item.getAmount() == null ? 0.0 : item.getAmount())
-                  .sum());
+                  .map(
+                      item -> BigDecimal.valueOf(item.getAmount() == null ? 0.0 : item.getAmount()))
+                  .reduce(BigDecimal.ZERO, BigDecimal::add));
     }
 
     invoice.setClient(client);
-    invoice.setUserId(client.getUser().getId());
-    invoice.setTotalAmount(java.math.BigDecimal.valueOf(invoice.getSubTotal()));
-    invoice.setAmountPaid(java.math.BigDecimal.ZERO);
+    invoice.setCreatedBy(creator);
+    invoice.setTotalAmount(invoice.getSubTotal());
+    invoice.setAmountPaid(BigDecimal.ZERO);
     invoice.setAmountStatus(PaymentAmountStatus.DORMANT);
+    invoice.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+    invoice.setUpdatedAt(invoice.getCreatedAt());
 
     if (invoice.getStatus() == null || invoice.getStatus().isBlank()) {
       invoice.setStatus("PENDING");
@@ -49,29 +57,19 @@ public class InvoiceService {
   public List<Invoice> getInvoicesByClient(Long clientId, String username) {
 
     clientRepository
-        .findByIdAndUserUsername(clientId, username)
+        .findByIdAndUsers_Username(clientId, username)
         .orElseThrow(() -> new RuntimeException("Client does not exist"));
 
     return invoiceRepository.findByClient_Id(clientId);
   }
 
   public List<Invoice> getInvoicesForCurrentUser(String username) {
-    String email =
+    Long userId =
         userRepository
             .findByUsername(username)
             .orElseThrow(() -> new RuntimeException("User does not exist"))
-            .getEmail();
-
-    Client client =
-        clientRepository
-            .findByEmail(email)
-            .orElseThrow(() -> new RuntimeException("No client profile found for this account"));
-
-    if (client.getId() == null) {
-      throw new RuntimeException("No client profile found for this account");
-    }
-
-    return invoiceRepository.findByClient_Id(client.getId());
+            .getId();
+    return invoiceRepository.findByClient_Users_Id(userId);
   }
 
   public void deleteInvoice(Long invoiceId, String username) {
@@ -82,7 +80,7 @@ public class InvoiceService {
             .orElseThrow(() -> new RuntimeException("Invoice does not exist"));
 
     clientRepository
-        .findByIdAndUserUsername(invoice.getClient().getId(), username)
+        .findByIdAndUsers_Username(invoice.getClient().getId(), username)
         .orElseThrow(() -> new RuntimeException("Client does not exist"));
 
     invoiceRepository.delete(invoice);

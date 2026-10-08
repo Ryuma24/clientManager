@@ -43,12 +43,13 @@ public class PaymentService {
 
     Invoice invoice =
         invoiceRepository
-            .findByIdAndClient_Email(paymentRequest.getInvoiceId(), userEmail(username))
+            .findByIdAndClient_Users_Id(paymentRequest.getInvoiceId(), userId(username))
             .orElseThrow(() -> new RuntimeException("Invoice does not exist"));
 
     BigDecimal total =
-        invoice.getTotalAmount() == null ? BigDecimal.valueOf(invoice.getSubTotal()) : invoice.getTotalAmount();
-    BigDecimal currentPaid = invoice.getAmountPaid() == null ? BigDecimal.ZERO : invoice.getAmountPaid();
+        invoice.getTotalAmount() == null ? invoice.getSubTotal() : invoice.getTotalAmount();
+    BigDecimal currentPaid =
+        invoice.getAmountPaid() == null ? BigDecimal.ZERO : invoice.getAmountPaid();
     BigDecimal remaining = total.subtract(currentPaid);
 
     if (paymentRequest.getAmount().compareTo(remaining) > 0) {
@@ -56,7 +57,8 @@ public class PaymentService {
     }
 
     try {
-      long amountInPaise = paymentRequest.getAmount().multiply(BigDecimal.valueOf(100)).longValueExact();
+      long amountInPaise =
+          paymentRequest.getAmount().multiply(BigDecimal.valueOf(100)).longValueExact();
 
       JSONObject orderRequest = new JSONObject();
       orderRequest.put("amount", amountInPaise);
@@ -120,12 +122,13 @@ public class PaymentService {
     }
 
     BigDecimal paidAmount = payment.getAmount() == null ? BigDecimal.ZERO : payment.getAmount();
-    BigDecimal currentPaid = invoice.getAmountPaid() == null ? BigDecimal.ZERO : invoice.getAmountPaid();
+    BigDecimal currentPaid =
+        invoice.getAmountPaid() == null ? BigDecimal.ZERO : invoice.getAmountPaid();
     BigDecimal newTotalPaid = currentPaid.add(paidAmount);
 
     invoice.setAmountPaid(newTotalPaid);
     invoice.setTotalAmount(
-        invoice.getTotalAmount() == null ? BigDecimal.valueOf(invoice.getSubTotal()) : invoice.getTotalAmount());
+        invoice.getTotalAmount() == null ? invoice.getSubTotal() : invoice.getTotalAmount());
 
     if (newTotalPaid.compareTo(invoice.getTotalAmount()) >= 0) {
       invoice.setAmountStatus(PaymentAmountStatus.FULL);
@@ -148,14 +151,16 @@ public class PaymentService {
   @Transactional
   public void doPayment(Long paymentId, PaymentRequest paymentRequest, String username) {
 
-    if (paymentRequest == null || paymentRequest.getInvoiceId() == null || paymentRequest.getAmount() == null
+    if (paymentRequest == null
+        || paymentRequest.getInvoiceId() == null
+        || paymentRequest.getAmount() == null
         || paymentRequest.getAmount().signum() <= 0) {
       throw new RuntimeException("Invalid payment request");
     }
 
     Invoice invoice =
         invoiceRepository
-            .findByIdAndClient_Email(paymentRequest.getInvoiceId(), userEmail(username))
+            .findByIdAndClient_Users_Id(paymentRequest.getInvoiceId(), userId(username))
             .orElseThrow(() -> new RuntimeException("Invoice does not exist"));
 
     Payment payment =
@@ -168,8 +173,9 @@ public class PaymentService {
     }
 
     BigDecimal total =
-        invoice.getTotalAmount() == null ? BigDecimal.valueOf(invoice.getSubTotal()) : invoice.getTotalAmount();
-    BigDecimal currentPaid = invoice.getAmountPaid() == null ? BigDecimal.ZERO : invoice.getAmountPaid();
+        invoice.getTotalAmount() == null ? invoice.getSubTotal() : invoice.getTotalAmount();
+    BigDecimal currentPaid =
+        invoice.getAmountPaid() == null ? BigDecimal.ZERO : invoice.getAmountPaid();
     BigDecimal remaining = total.subtract(currentPaid);
 
     if (paymentRequest.getAmount().compareTo(remaining) > 0) {
@@ -194,10 +200,10 @@ public class PaymentService {
     paymentRepository.save(payment);
   }
 
-  private String userEmail(String username) {
+  private Long userId(String username) {
     return userRepository
         .findByUsername(username)
-        .map(user -> user.getEmail())
+        .map(User::getId)
         .orElseThrow(() -> new RuntimeException("User does not exist"));
   }
 }

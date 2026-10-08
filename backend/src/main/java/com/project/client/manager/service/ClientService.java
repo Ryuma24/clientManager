@@ -7,6 +7,7 @@ import com.project.client.manager.repository.UserRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -15,36 +16,46 @@ public class ClientService {
   private final ClientRepository clientRepository;
   private final UserRepository userRepository;
 
+  @Transactional
   public Client createClient(Client client, String userName) {
 
-    client.setUser(
+    User owner =
         userRepository
             .findByUsername(userName)
-            .orElseThrow(() -> new RuntimeException("User not found")));
+            .orElseThrow(() -> new RuntimeException("User not found"));
 
-    clientRepository.save(client);
+    Client savedClient = clientRepository.save(client);
 
-    return client;
+    owner.getClients().add(savedClient);
+    savedClient.getUsers().add(owner);
+
+    return savedClient;
   }
 
+  @Transactional(readOnly = true)
   public List<Client> getClients(String username) {
-
-    return clientRepository.findByUserUsername(username);
+    return clientRepository.findByUsers_Username(username);
   }
 
+  // we don't need to save user into user repository , hibernate is managing that
+  @Transactional
   public void deleteClient(Long clientId, String username) {
 
     User user =
         userRepository
             .findByUsername(username)
-            .orElseThrow(() -> new RuntimeException("User Not found!"));
+            .orElseThrow(() -> new RuntimeException("User not found"));
 
     Client client =
         clientRepository
-            .findByIdAndUserId(clientId, user.getId())
+            .findByIdAndUsers_Username(clientId, username)
             .orElseThrow(() -> new RuntimeException("Client not found"));
-    ;
 
-    clientRepository.delete(client);
+    user.getClients().remove(client);
+    client.getUsers().remove(user);
+
+    if (client.getUsers().isEmpty()) {
+      clientRepository.delete(client);
+    }
   }
 }

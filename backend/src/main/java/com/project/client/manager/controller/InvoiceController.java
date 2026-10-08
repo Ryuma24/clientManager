@@ -1,6 +1,5 @@
 package com.project.client.manager.controller;
 
-import com.project.client.manager.model.Client;
 import com.project.client.manager.model.Invoice;
 import com.project.client.manager.service.InvoiceService;
 import java.util.List;
@@ -21,18 +20,13 @@ public class InvoiceController {
   @PostMapping("/create")
   public ResponseEntity<Invoice> createInvoice(
       @RequestBody Invoice invoice, Authentication authentication) {
-    if (invoice.getClient() == null && invoice.getClientId() != null) {
-      Client client = new Client();
-      client.setId(invoice.getClientId());
-      invoice.setClient(client);
-    }
-
     if (invoice.getClient() == null || invoice.getClient().getId() == null) {
       throw new RuntimeException("Client is required");
     }
 
     return ResponseEntity.ok(
-        invoiceService.createInvoice(invoice, invoice.getClient().getId(), authentication.getName()));
+        invoiceService.createInvoice(
+            invoice, invoice.getClient().getId(), authentication.getName()));
   }
 
   @GetMapping("/client/{clientId}")

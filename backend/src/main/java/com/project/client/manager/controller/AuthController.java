@@ -28,7 +28,7 @@ public class AuthController {
     try {
 
       User existingUser =
-          authService.loginUser(request).orElseThrow(() -> new RuntimeException(""));
+          authService.authenticate(request).orElseThrow(() -> new RuntimeException(""));
 
       String token =
           jwtService.generateToken(
@@ -54,7 +54,7 @@ public class AuthController {
   @PostMapping("/register")
   public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
     try {
-      User createdUser = authService.registerUser(request);
+      User createdUser = authService.registerAccount(request);
       String token =
           jwtService.generateToken(
               createdUser.getUsername(),
