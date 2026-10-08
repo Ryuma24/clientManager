@@ -1,6 +1,7 @@
 package com.project.client.manager.service;
 
 import com.project.client.manager.model.Client;
+import com.project.client.manager.model.Role;
 import com.project.client.manager.model.User;
 import com.project.client.manager.repository.ClientRepository;
 import com.project.client.manager.repository.UserRepository;
@@ -28,6 +29,15 @@ public class ClientService {
 
     owner.getClients().add(savedClient);
     savedClient.getUsers().add(owner);
+
+    userRepository
+        .findByEmailIgnoreCase(savedClient.getEmail())
+        .filter(account -> account.getRole() == Role.CLIENT)
+        .ifPresent(
+            clientAccount -> {
+              clientAccount.getClients().add(savedClient);
+              savedClient.getUsers().add(clientAccount);
+            });
 
     return savedClient;
   }
