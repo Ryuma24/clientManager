@@ -41,39 +41,3 @@ ALTER TABLE invoices
     ADD CONSTRAINT fk_invoice_created_by_user
         FOREIGN KEY (created_by_user_id)
             REFERENCES users(id);
-
-
--- ============================================================
--- 5. Convert PaymentAmountStatus from ordinal to string
---
--- 0 = PARTIAL
--- 1 = FULL
--- 2 = DORMANT
--- ============================================================
-
-ALTER TABLE invoices
-ALTER COLUMN amount_status TYPE VARCHAR(50)
-USING CASE amount_status
-    WHEN 0 THEN 'PARTIAL'
-    WHEN 1 THEN 'FULL'
-    WHEN 2 THEN 'DORMANT'
-    ELSE NULL
-END;
-
-
--- ============================================================
--- 6. Convert PaymentStatus from ordinal to string
---
--- 0 = PENDING
--- 1 = SUCCESSFUL
--- 2 = FAILED
--- ============================================================
-
-ALTER TABLE payment
-ALTER COLUMN status TYPE VARCHAR(50)
-USING CASE status
-    WHEN 0 THEN 'PENDING'
-    WHEN 1 THEN 'SUCCESSFUL'
-    WHEN 2 THEN 'FAILED'
-    ELSE NULL
-END;
