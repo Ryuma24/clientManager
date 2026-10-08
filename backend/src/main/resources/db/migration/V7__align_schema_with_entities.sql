@@ -65,7 +65,23 @@ END
 $$;
 
 DO $$
+DECLARE constraint_name text;
 BEGIN
+    -- Legacy ordinal checks (for example, amount_status >= 0) cannot be
+    -- re-evaluated after converting the enum column to VARCHAR.
+    FOR constraint_name IN
+        SELECT DISTINCT c.conname
+        FROM pg_constraint c
+        JOIN pg_attribute a
+          ON a.attrelid = c.conrelid
+         AND a.attnum = ANY(c.conkey)
+        WHERE c.conrelid = 'public.invoices'::regclass
+          AND c.contype = 'c'
+          AND a.attname = 'amount_status'
+    LOOP
+        EXECUTE format('ALTER TABLE public.invoices DROP CONSTRAINT %I', constraint_name);
+    END LOOP;
+
     IF EXISTS (
         SELECT 1 FROM public.invoices
         WHERE amount_status IS NOT NULL
@@ -89,8 +105,26 @@ ALTER TABLE public.invoices
         ELSE NULL
     END;
 
+ALTER TABLE public.invoices
+    ADD CONSTRAINT invoices_amount_status_check
+    CHECK (amount_status IS NULL OR amount_status IN ('PARTIAL', 'FULL', 'DORMANT'));
+
 DO $$
+DECLARE constraint_name text;
 BEGIN
+    FOR constraint_name IN
+        SELECT DISTINCT c.conname
+        FROM pg_constraint c
+        JOIN pg_attribute a
+          ON a.attrelid = c.conrelid
+         AND a.attnum = ANY(c.conkey)
+        WHERE c.conrelid = 'public.payments'::regclass
+          AND c.contype = 'c'
+          AND a.attname = 'status'
+    LOOP
+        EXECUTE format('ALTER TABLE public.payments DROP CONSTRAINT %I', constraint_name);
+    END LOOP;
+
     IF EXISTS (
         SELECT 1 FROM public.payments
         WHERE status IS NOT NULL
@@ -113,3 +147,7 @@ ALTER TABLE public.payments
         WHEN 'FAILED' THEN 'FAILED'
         ELSE NULL
     END;
+
+ALTER TABLE public.payments
+    ADD CONSTRAINT payments_status_check
+    CHECK (status IS NULL OR status IN ('PENDING', 'SUCCESSFUL', 'FAILED'));
