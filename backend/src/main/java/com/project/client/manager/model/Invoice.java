@@ -57,9 +57,12 @@ public class Invoice {
   @ElementCollection
   @CollectionTable(name = "invoice_items", joinColumns = @JoinColumn(name = "invoice_id"))
   private List<InvoiceItem> invoiceItemList;
-
-  @ElementCollection
-  @CollectionTable(name = "invoice_payments", joinColumns = @JoinColumn(name = "invoice_id"))
+  
+  @OneToMany(
+          mappedBy = "invoice",
+          cascade = CascadeType.ALL,
+          orphanRemoval = true
+  )
   private List<Payment> paymentsList;
 
   private BigDecimal taxAmount;

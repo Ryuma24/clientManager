@@ -1,0 +1,2 @@
+-- Existing Supabase database.
+-- Flyway baseline only.
