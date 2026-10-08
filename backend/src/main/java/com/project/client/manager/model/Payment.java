@@ -1,5 +1,6 @@
 package com.project.client.manager.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -32,6 +33,7 @@ public class Payment{
   
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "invoice_id", nullable = false)
+  @JsonIgnore
   private Invoice invoice;
   
   private BigDecimal amount;
